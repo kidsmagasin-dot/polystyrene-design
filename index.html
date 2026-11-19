@@ -4144,7 +4144,13 @@
     // ===== SYNC ENGINE =====
     var SYNC = { busy: false, t: null, iv: null, last: '', err: '' };
     function syncCfg() { const c = config.sync; return c && c.url && c.code ? c : null; }
-    function syncBase() { const c = syncCfg(); return c.url.replace(/\/+$/, '') + '/' + encodeURIComponent(c.code); }
+    // Adresse Firebase nettoyée : on ne garde que https://nom-de-la-base (sans /test.json, /.json, espaces, « / » final…)
+    function cleanFbUrl(u) {
+      u = String(u || '').trim().replace(/\s+/g, '');
+      if (u && !/^https?:\/\//i.test(u)) u = 'https://' + u;
+      try { const x = new URL(u); return x.protocol === 'https:' ? x.origin : ''; } catch (e) { return ''; }
+    }
+    function syncBase() { const c = syncCfg(); return cleanFbUrl(c.url) + '/' + encodeURIComponent(c.code); }
     function stableStr(o) {
       if (Array.isArray(o)) return '[' + o.map(stableStr).join(',') + ']';
       if (o && typeof o === 'object') return '{' + Object.keys(o).filter((k) => o[k] !== undefined).sort().map((k) => JSON.stringify(k) + ':' + stableStr(o[k])).join(',') + '}';
@@ -4334,7 +4340,8 @@
       else syncNow(true);
     }
     async function testSyncConnection() {
-      const url = (document.getElementById('sy-url').value || '').trim().replace(/\/+$/, '');
+      const url = cleanFbUrl(document.getElementById('sy-url').value);
+      if (url) document.getElementById('sy-url').value = url;
       const code = (document.getElementById('sy-code').value || '').trim();
       const st = document.getElementById('sy-status');
       const out = [];
@@ -4356,7 +4363,8 @@
       document.getElementById('sy-code').value = Array.from(a).map((x) => x.toString(36).padStart(2, '0')).join('').slice(0, 22);
     }
     function activateSyncAdmin() {
-      const url = document.getElementById('sy-url').value.trim();
+      const url = cleanFbUrl(document.getElementById('sy-url').value);
+      document.getElementById('sy-url').value = url;
       const code = document.getElementById('sy-code').value.trim();
       if (!/^https:\/\/.+/.test(url)) return toast('Adresse invalide (https://...).', 'error');
       if (!/^[A-Za-z0-9_-]{16,}$/.test(code)) return toast('Code : 16 caractères minimum (lettres/chiffres). Utilisez « Générer ».', 'error');
@@ -4369,9 +4377,9 @@
     }
     function connectWorker() {
       try {
-        const d = JSON.parse(atob(document.getElementById('sync-code-in').value.trim()));
+        const d = JSON.parse(atob(document.getElementById('sync-code-in').value.replace(/\s+/g, '')));
         if (!/^https:\/\/.+/.test(d.u) || !d.c) throw new Error('bad');
-        config.sync = { url: d.u, code: d.c, role: 'worker', hashes: {}, catHash: '' };
+        config.sync = { url: cleanFbUrl(d.u), code: String(d.c).trim(), role: 'worker', hashes: {}, catHash: '' };
         config.atelierLocked = true;
         persistConfig(); applyAtelierLockedUI();
         document.getElementById('modal-sync').classList.add('hidden');
