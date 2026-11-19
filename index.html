@@ -1866,8 +1866,10 @@
   <div id="modal-sync" class="modal-backdrop hidden no-print">
     <div class="modal-box" style="max-width:380px; padding:20px; display:flex; flex-direction:column; gap:12px;">
       <p style="font-size:0.95rem; font-weight:900; color:var(--slate-800);">Connexion à l'Administration</p>
-      <p style="font-size:0.78rem; color:var(--slate-600);">Collez le code envoyé par le gestionnaire : les bons saisis ici lui parviendront automatiquement.</p>
+      <p id="ms-status" class="hidden" style="font-size:0.8rem; font-weight:800; color:var(--emerald-700); margin:0;"></p>
+      <p style="font-size:0.78rem; color:var(--slate-600);">Collez le code envoyé par le gestionnaire : les bons saisis ici lui parviendront automatiquement. (Pour changer de code, collez le nouveau puis « Connecter ».)</p>
       <textarea id="sync-code-in" class="input" rows="4" placeholder="Code de connexion"></textarea>
+      <button type="button" id="ms-sync-btn" class="btn btn-outline hidden" onclick="syncNow(true)">Synchroniser maintenant</button>
       <div class="segmented" style="background:transparent; border:none; padding:0;">
         <button type="button" class="btn btn-outline" onclick="document.getElementById('modal-sync').classList.add('hidden')">Annuler</button>
         <button type="button" class="btn btn-primary" onclick="connectWorker()">Connecter</button>
@@ -4188,7 +4190,7 @@
         busy: '☁ Synchronisation…',
         wait: '☁ Hors ligne — en attente',
         err: '☁ Erreur de synchronisation',
-        ok: '☁ Synchronisé ' + t
+        ok: '☁ Synchronisé ' + t + (syncTag() ? ' · ' + syncTag() : '')
       };
       el.textContent = map[state] || map.off;
       const st = document.getElementById('sy-status');
@@ -4335,9 +4337,18 @@
       SYNC.iv = setInterval(() => syncNow(false), 20000);
       syncNow(false);
     }
+    // Les 4 premiers caractères du code : à comparer sur les deux téléphones (ils doivent être identiques)
+    function syncTag() { const c = syncCfg(); return c ? String(c.code).slice(0, 4) : ''; }
     function syncChipClick() {
-      if (!syncCfg()) document.getElementById('modal-sync').classList.remove('hidden');
-      else syncNow(true);
+      const c = syncCfg();
+      if (c && c.role === 'admin') return syncNow(true);
+      // Atelier (ou non connecté) : fenêtre de connexion, pour pouvoir aussi changer de code
+      const st = document.getElementById('ms-status');
+      st.classList.toggle('hidden', !c);
+      document.getElementById('ms-sync-btn').classList.toggle('hidden', !c);
+      if (c) { st.textContent = 'Connecté avec le code « ' + syncTag() + '… » — ' + document.getElementById('sync-chip').textContent; syncNow(false); }
+      document.getElementById('sync-code-in').value = '';
+      document.getElementById('modal-sync').classList.remove('hidden');
     }
     async function testSyncConnection() {
       const url = cleanFbUrl(document.getElementById('sy-url').value);
@@ -4376,6 +4387,7 @@
       copyTextSafe(btoa(JSON.stringify({ u: c.url, c: c.code, r: 'worker' })));
     }
     function connectWorker() {
+      if (config.pwHash) return toast('Ce téléphone est le poste Gestionnaire : activez la synchronisation depuis Réglages, pas avec le code atelier.', 'error');
       try {
         const d = JSON.parse(atob(document.getElementById('sync-code-in').value.replace(/\s+/g, '')));
         if (!/^https:\/\/.+/.test(d.u) || !d.c) throw new Error('bad');
