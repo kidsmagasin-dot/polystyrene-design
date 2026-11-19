@@ -1240,8 +1240,8 @@
           <input type="password" id="setup-pw1" class="input text-center" style="max-width:280px;" placeholder="Nouveau mot de passe (6 caractères min.)" autocomplete="new-password" />
           <input type="password" id="setup-pw2" class="input text-center" style="max-width:280px;" placeholder="Répétez le mot de passe" autocomplete="new-password" onkeydown="if(event.key==='Enter') createAdminPassword()" />
           <button type="button" class="btn btn-primary" style="min-width:200px;" onclick="createAdminPassword()">Créer et entrer</button>
-          <div style="display:flex; gap:6px; width:100%; max-width:300px;">
-            <input type="text" id="rk-setup" class="input input-sm" style="flex:1; text-transform:uppercase;" placeholder="Clé de récupération" autocomplete="off" autocapitalize="characters" />
+          <div style="display:flex; flex-wrap:wrap; gap:6px; width:100%; max-width:320px;">
+            <input type="text" id="rk-setup" class="input" style="flex:1 1 200px; min-width:0; text-transform:uppercase;" spellcheck="false" placeholder="Clé de récupération" autocomplete="off" autocapitalize="characters" />
             <button type="button" class="btn btn-sm btn-amber" onclick="restoreEmbeddedData('rk-setup')">Restaurer</button>
           </div>
           <label class="btn btn-sm btn-outline" style="cursor:pointer;">
@@ -1644,14 +1644,17 @@
               </div>
               <div class="col-4 flex gap-2">
                 <button type="button" class="btn btn-sm btn-outline w-full" onclick="exportBackupJSON()">Export JSON</button>
-                <div style="display:flex; gap:6px;">
-                  <input type="text" id="rk-settings" class="input input-sm" style="flex:1; text-transform:uppercase;" placeholder="Clé de récupération" autocomplete="off" autocapitalize="characters" />
-                  <button type="button" class="btn btn-sm btn-amber" onclick="restoreEmbeddedData('rk-settings')">Restaurer</button>
-                </div>
                 <label class="btn btn-sm btn-outline w-full" style="cursor:pointer;">
                   Import JSON
                   <input type="file" accept=".json" class="hidden" onchange="importBackupJSON(event)" />
                 </label>
+              </div>
+            </div>
+            <div style="margin-top:12px; padding:12px; border-radius:12px; background:var(--amber-50, #fffbeb); border:1px solid var(--amber-300, #fcd34d);">
+              <label class="field-label" for="rk-settings" style="margin-bottom:6px; display:block;">Clé de récupération (restaurer bons, coûts et archive)</label>
+              <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                <input type="text" id="rk-settings" class="input" style="flex:1 1 220px; min-width:0; font-size:1rem; letter-spacing:0.05em; text-transform:uppercase;" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false" />
+                <button type="button" class="btn btn-amber" style="flex:0 0 auto;" onclick="restoreEmbeddedData('rk-settings')">Restaurer</button>
               </div>
             </div>
           </div>
