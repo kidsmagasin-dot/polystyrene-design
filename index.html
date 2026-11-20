@@ -1602,7 +1602,7 @@
             <div class="set-in">
               <label class="deliv-toggle" style="background:var(--slate-100);">
                 <input type="checkbox" id="set-lock-worker" onchange="setLockWorker(this.checked)" />
-                <span>Interdire à l'atelier de supprimer des bons/clients et de modifier les prix</span>
+                <span>Interdire à l'atelier de supprimer des bons/clients (les prix restent modifiables)</span>
               </label>
               <div class="flex flex-wrap gap-2" style="margin-top:10px;">
                 <button type="button" class="btn btn-sm btn-outline" onclick="exportBackupJSON()">Exporter une sauvegarde</button>
@@ -2088,7 +2088,7 @@
       firstUse: '',
       overtimeRate: 0,        // DA / heure supplémentaire
       overtimeByDate: {},     // { 'AAAA-MM-JJ': heures }
-      lockWorkerEdits: true,  // true = l'atelier ne peut ni supprimer ni modifier prix/clients
+      lockWorkerEdits: true,  // true = l'atelier ne peut pas supprimer bons/clients (prix modifiable par tous)
       partners: ['Associé 1', 'Associé 2', 'Associé 3'],
       history: []
     };
@@ -2792,7 +2792,6 @@
     }
 
     function editDraftLine(idx, field, val) {
-      if (field === 'unitPrice' && workerLocked()) { toast('Prix modifiable par le Gestionnaire uniquement.', 'error'); return renderBonLines(); }
       const n = parseFloat(val);
       if (isNaN(n) || n < 0) return;
       if (field === 'qty' && n < 1) return;
@@ -2823,7 +2822,7 @@
               <input type="number" min="1" class="input input-sm text-center" style="width:70px;" value="${it.qty}" onchange="editDraftLine(${idx},'qty',this.value)" />
             </td>
             <td class="text-center">
-              <input type="number" min="0" class="input input-sm text-center" style="width:82px; color:var(--emerald-700);" value="${it.unitPrice}" ${workerLocked() ? 'readonly' : ''} onchange="editDraftLine(${idx},'unitPrice',this.value)" />
+              <input type="number" min="0" class="input input-sm text-center" style="width:82px; color:var(--emerald-700);" value="${it.unitPrice}" onchange="editDraftLine(${idx},'unitPrice',this.value)" />
             </td>
             <td class="text-right font-black">${fmtDA(it.qty * it.unitPrice)}</td>
             <td class="text-center">
@@ -3902,7 +3901,7 @@
     function workerLocked() { return !!config.lockWorkerEdits && !adminUnlocked; }
     function applyWorkerLocks() {
       const el = document.getElementById('item-price');
-      if (el) el.readOnly = workerLocked();
+      if (el) el.readOnly = false; // prix modifiable par tous (atelier + gestionnaire)
       renderBonLines();
       renderBonsCards();
     }
